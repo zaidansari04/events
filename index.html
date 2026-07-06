@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoEngage Event Dashboard — Swiggy</title>
+<style>
+  :root {
+    --bg:#f7f5f2; --surface:#fff; --surface2:#f2f0ec; --surface3:#ece9e3;
+    --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.13);
+    --text:#1a1a1a; --text2:#555; --text3:#aaa;
+    --accent:#1a1a1a; --accent-dim:rgba(26,26,26,0.06);
+    --green:#059669; --green-dim:rgba(5,150,105,0.08);
+    --amber:#d97706; --amber-dim:rgba(217,119,6,0.07);
+    --red:#dc2626; --red-dim:rgba(220,38,38,0.06);
+    --purple:#7c3aed; --purple-dim:rgba(124,58,237,0.07);
+    --teal:#0891b2; --teal-dim:rgba(8,145,178,0.07);
+    --orange:#ea580c; --orange-dim:rgba(234,88,12,0.07);
+    --radius:8px; --radius-sm:5px;
+    --font:'Inter',-apple-system,sans-serif;
+    --mono:'JetBrains Mono','Fira Code',monospace;
+    --warm-border:#e8e4de;
+    --warm-border2:#d6d1c9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
+
+  /* ── HEADER ── */
+  .header{padding:14px 24px;border-bottom:1px solid var(--warm-border);display:flex;align-items:center;gap:12px;background:var(--surface);}
+  .logo{width:30px;height:30px;background:#1a1a1a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+  .header-text h1{font-size:14px;font-weight:600;letter-spacing:-.2px;color:var(--text);}
+  .header-text p{font-size:11px;color:var(--text3);}
+  .header-right{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+  .hbadge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;border:1px solid var(--warm-border);background:var(--surface2);color:var(--text2);}
+
+  /* ── PLATFORM BAR ── */
+  .platform-bar{display:flex;align-items:center;gap:8px;padding:9px 24px;border-bottom:1px solid var(--warm-border);background:var(--surface);}
+  .platform-bar-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-right:2px;}
+  .plat-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid var(--warm-border);background:var(--surface);cursor:pointer;font-size:11.5px;font-family:var(--font);font-weight:500;color:var(--text2);transition:all .13s;}
+  .plat-btn:hover{background:var(--surface2);}
+  .plat-btn.active.all{background:var(--text);color:#fff;border-color:var(--text);}
+  .plat-btn.active.ios{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+  .plat-btn.active.android{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+  .plat-dot{width:7px;height:7px;border-radius:50%;}
+  .plat-dot.all{background:linear-gradient(135deg,#007aff,#3dba4e);}
+  .plat-dot.ios{background:#007aff;}
+  .plat-dot.android{background:#3dba4e;}
+  .plat-stats{margin-left:auto;display:flex;gap:14px;}
+  .pstat{font-size:11px;color:var(--text3);}
+  .pstat span{font-weight:600;color:var(--text);}
+
+  /* ── LAYOUT ── */
+  .layout{display:flex;height:calc(100vh - 111px);}
+
+  /* ── LEFT SIDEBAR ── */
+  .sidebar{width:228px;flex-shrink:0;border-right:1px solid var(--warm-border);display:flex;flex-direction:column;background:#f4f1ed;overflow:hidden;}
+  .sidebar-scroll{flex:1;overflow-y:auto;padding:10px 0;}
+  .sb-section{padding:4px 12px;margin-top:4px;}
+  .sb-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;}
+  .sb-divider{height:1px;background:var(--warm-border);margin:8px 12px;}
+
+  /* folder */
+  .folder{margin-bottom:2px;}
+  .folder-header{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:11.5px;font-weight:600;color:var(--text2);transition:background .12s;user-select:none;}
+  .folder-header:hover{background:rgba(0,0,0,0.04);}
+  .folder-badge{font-size:9px;background:var(--surface3);padding:1px 5px;border-radius:8px;color:var(--text3);}
+  .folder-chevron{font-size:9px;color:var(--text3);margin-left:auto;transition:transform .2s;}
+  .folder.open .folder-chevron{transform:rotate(90deg);}
+  .folder-children{display:none;padding-left:8px;}
+  .folder.open .folder-children{display:block;}
+
+  /* all-sessions btn */
+  .all-btn{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:5px 10px;border-radius:var(--radius-sm);color:var(--text2);font-size:11.5px;font-family:var(--font);display:flex;align-items:center;gap:7px;transition:all .12s;margin-bottom:2px;}
+  .all-btn:hover{background:rgba(0,0,0,0.04);}
+  .all-btn.active{background:var(--text);color:#fff;}
+  .all-dot{width:6px;height:6px;border-radius:50%;background:var(--text2);}
+
+  /* file btn */
+  .file-btn{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:var(--radius-sm);color:var(--text2);font-size:11px;font-family:var(--font);display:flex;align-items:center;gap:7px;transition:all .12s;}
+  .file-btn:hover{background:rgba(0,0,0,0.04);}
+  .file-btn.active{background:var(--text);color:#fff;}
+  .fdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+  .fc{margin-left:auto;font-size:10px;opacity:.5;}
+
+  /* ios dots */
+  .ios-f1 .fdot{background:#007aff;} .ios-f2 .fdot{background:#34aadc;}
+  .ios-f3 .fdot{background:#5ac8fa;} .ios-f4 .fdot{background:#4cd964;}
+  .ios-f5 .fdot{background:#ff9500;} .ios-f6 .fdot{background:#ff3b30;}
+  /* android dots */
+  .and-f1  .fdot{background:#4f63e7;} .and-f2  .fdot{background:#059669;}
+  .and-f3  .fdot{background:#d97706;} .and-f4  .fdot{background:#dc2626;}
+  .and-f5  .fdot{background:#7c3aed;} .and-f6  .fdot{background:#0891b2;}
+  .and-f7  .fdot{background:#ea580c;} .and-f8  .fdot{background:#0d9488;}
+  .and-f9  .fdot{background:#be185d;} .and-f10 .fdot{background:#1d4ed8;}
+  .and-f11 .fdot{background:#65a30d;} .and-f12 .fdot{background:#9333ea;}
+  .and-f13 .fdot{background:#b45309;}
+
+  /* cat btns */
+  .cat-btn{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:5px 10px;border-radius:var(--radius-sm);color:var(--text2);font-size:11.5px;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:all .12s;}
+  .cat-btn:hover{background:rgba(0,0,0,0.04);}
+  .cat-btn.active.sdk-lifecycle{color:var(--purple);background:var(--purple-dim);}
+  .cat-btn.active.sdk-identity {color:var(--teal);  background:var(--teal-dim);}
+  .cat-btn.active.sdk-auto     {color:var(--amber); background:var(--amber-dim);}
+  .cat-btn.active.sdk-push     {color:var(--orange);background:var(--orange-dim);}
+  .cat-btn.active.sdk-session  {color:var(--green); background:var(--green-dim);}
+  .cat-btn.active.custom       {color:var(--green); background:var(--green-dim);}
+  .cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .cdot.sdk-lifecycle{background:var(--purple);} .cdot.sdk-identity{background:var(--teal);}
+  .cdot.sdk-auto{background:var(--amber);}       .cdot.sdk-push{background:var(--orange);}
+  .cdot.sdk-session{background:var(--green);}    .cdot.custom{background:var(--green);}
+  .cpill{margin-left:auto;font-size:9px;background:rgba(0,0,0,0.06);padding:1px 6px;border-radius:8px;color:var(--text3);}
+
+  /* ── MAIN ── */
+  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+  .main-inner{padding:20px 24px;flex:1;}
+
+  /* context banner */
+  .context-banner{background:var(--surface);border:1px solid var(--warm-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctx-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .ctx-info{flex:1;min-width:0;}
+  .ctx-title{font-size:13px;font-weight:600;color:var(--text);}
+  .ctx-meta{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+  .ctx-stats{display:flex;gap:14px;flex-wrap:wrap;}
+  .cstat{text-align:center;}
+  .cstat-val{font-size:18px;font-weight:600;line-height:1;color:var(--text);}
+  .cstat-label{font-size:10px;color:var(--text3);margin-top:2px;}
+
+  /* search */
+  .search-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .search-input{flex:1;background:var(--surface);border:1px solid var(--warm-border);border-radius:var(--radius-sm);padding:7px 11px;color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
+  .search-input:focus{border-color:var(--text);}
+  .search-input::placeholder{color:var(--text3);}
+  .results-count{font-size:11px;color:var(--text3);white-space:nowrap;}
+
+  /* section label */
+  .section-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--warm-border);}
+
+  /* ── EVENT CARDS ── */
+  .events-list{display:flex;flex-direction:column;gap:5px;margin-bottom:28px;}
+  .event-card{background:var(--surface);border:1px solid var(--warm-border);border-radius:var(--radius);overflow:hidden;transition:border-color .12s;}
+  .event-card:hover{border-color:var(--warm-border2);}
+  .event-card.open{border-color:var(--warm-border2);}
+  .event-card-header{padding:10px 14px;display:flex;align-items:center;gap:10px;}
+  .event-card-header.clickable{cursor:pointer;}
+  .event-card-header.clickable:hover{background:var(--surface2);}
+  .ev-cat-accent{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:32px;}
+  .ev-main{flex:1;min-width:0;}
+  .ev-name{font-size:12px;font-weight:500;color:var(--text);font-family:var(--mono);}
+  .ev-desc{font-size:11px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ev-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .ev-cat-label{font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap;font-weight:500;}
+  .ev-cat-label.sdk-lifecycle{background:var(--purple-dim);color:var(--purple);}
+  .ev-cat-label.sdk-identity {background:var(--teal-dim);  color:var(--teal);}
+  .ev-cat-label.sdk-auto     {background:var(--amber-dim); color:var(--amber);}
+  .ev-cat-label.sdk-push     {background:var(--orange-dim);color:var(--orange);}
+  .ev-cat-label.sdk-session  {background:var(--green-dim); color:var(--green);}
+  .ev-cat-label.custom       {background:var(--green-dim); color:var(--green);}
+  .ev-platform-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;}
+  .ev-platform-tag.ios{background:rgba(0,122,255,0.07);color:#0055bb;}
+  .ev-platform-tag.android{background:rgba(61,186,78,0.08);color:#166534;}
+  .ev-platform-tag.both{background:var(--surface2);color:var(--text2);}
+  .ev-attrs-pill{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text3);border:1px solid var(--warm-border);white-space:nowrap;}
+  .ev-count{font-size:13px;font-weight:600;color:var(--text);}
+  .ev-count-label{font-size:10px;color:var(--text3);margin-left:2px;font-weight:400;}
+  .ev-chevron{font-size:10px;color:var(--text3);margin-left:4px;transition:transform .2s;flex-shrink:0;}
+  .event-card.open .ev-chevron{transform:rotate(90deg);}
+
+  /* expanded body */
+  .event-body{display:none;border-top:1px solid var(--warm-border);padding:14px 14px 14px 31px;}
+  .event-card.open .event-body{display:block;}
+
+  /* attr table */
+  .attr-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  .attr-table thead th{text-align:left;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px 6px 0;border-bottom:1px solid var(--warm-border);}
+  .attr-table tbody tr:hover{background:var(--surface2);}
+  .attr-table td{padding:6px 10px 6px 0;vertical-align:top;border-bottom:1px solid var(--bg);}
+  .attr-table tbody tr:last-child td{border-bottom:none;}
+  .attr-key{font-family:var(--mono);color:#1a1a1a;font-size:11px;font-weight:500;}
+  .attr-type{font-size:10px;padding:1px 5px;border-radius:3px;background:var(--surface2);color:var(--text3);border:1px solid var(--warm-border);white-space:nowrap;}
+  .attr-sample{color:var(--text2);font-size:11px;}
+  .attr-note{color:var(--text3);font-size:11px;font-style:italic;}
+  .no-attrs{font-size:11px;color:var(--text3);font-style:italic;padding:2px 0;}
+  .ev-note{font-size:11px;color:var(--text3);margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm);line-height:1.5;border-left:2px solid var(--warm-border2);}
+
+  /* clear btn */
+  #clear-btn{display:none;}
+
+  .empty{text-align:center;padding:48px 24px;color:var(--text3);font-size:13px;}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px;}
+
+  .fc{cursor:default;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">M</div>
+  <div class="header-text">
+    <h1>MoEngage Event Dashboard</h1>
+    <p>Swiggy · iOS &amp; Android · 19 sessions</p>
+  </div>
+  <div class="header-right">
+    <span class="hbadge sessions">19 sessions</span>
+    <span class="hbadge events" id="hbadge-events">17 event types</span>
+  </div>
+</div>
+
+<!-- PLATFORM BAR -->
+<div class="platform-bar">
+  <span class="platform-bar-label">Platform</span>
+  <button class="plat-btn active all" data-plat="all"     onclick="filterPlatform('all',this)"><span class="plat-dot all"></span>All</button>
+  <button class="plat-btn ios"        data-plat="ios"     onclick="filterPlatform('ios',this)"><span class="plat-dot ios"></span>iOS</button>
+  <button class="plat-btn android"    data-plat="android" onclick="filterPlatform('android',this)"><span class="plat-dot android"></span>Android</button>
+  <div class="plat-stats">
+    <div class="pstat">Sessions: <span id="ps-sess">19</span></div>
+    <div class="pstat"><span id="ps-evts-label">MoE events</span>: <span id="ps-evts">1,558</span></div>
+    <div class="pstat"><span id="ps-cust-label">Custom fires</span>: <span id="ps-cust">67</span></div>
+    <div class="pstat">Attributes tracked: <span id="ps-attrs">0</span></div>
+
+    <div class="pstat" id="ps-filter-badge" style="display:none"><span id="ps-filter-text" style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(79,99,231,0.12);color:#3730a3;font-weight:500;border:1px solid rgba(79,99,231,0.2)"></span></div>
+  </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ═══ LEFT SIDEBAR ═══ -->
+  <div class="sidebar">
+    <div class="sidebar-scroll">
+
+      <!-- ALL SESSIONS -->
+      <div class="sb-section">
+        <button class="all-btn active" id="all-btn" onclick="filterFile('all',this)">
+          <span class="all-dot"></span> All sessions <span class="fc" id="all-fc" data-tooltip="19 sessions">19</span>
+        </button>
+      </div>
+
+      <!-- iOS FOLDER -->
+      <div class="sb-section">
+        <div class="folder open" id="folder-ios">
+          <div class="folder-header" onclick="toggleFolder('folder-ios')">
+            <span style="font-size:12px">📁</span> iOS
+            
+            <span class="folder-chevron">▶</span>
+          </div>
+          <div class="folder-children">
+            <button class="file-btn ios-f1" onclick="filterFile('ios-f1',this)"><span class="fdot"></span>Log 1 — iPhone iOS 26<span class="fc" data-tooltip="11 events fired">11</span></button>
+            <button class="file-btn ios-f2" onclick="filterFile('ios-f2',this)"><span class="fdot"></span>Log 2 — iPhone iOS 27<span class="fc" data-tooltip="11 events fired">11</span></button>
+            <button class="file-btn ios-f3" onclick="filterFile('ios-f3',this)"><span class="fdot"></span>Log 3 — iPhone iOS 26<span class="fc" data-tooltip="11 events fired">11</span></button>
+            <button class="file-btn ios-f4" onclick="filterFile('ios-f4',this)"><span class="fdot"></span>Log 4 — iPhone iOS 26<span class="fc" data-tooltip="11 events fired">11</span></button>
+            <button class="file-btn ios-f5" onclick="filterFile('ios-f5',this)"><span class="fdot"></span>Log 5 — iPhone iOS 27<span class="fc" data-tooltip="11 events fired">11</span></button>
+            <button class="file-btn ios-f6" onclick="filterFile('ios-f6',this)"><span class="fdot"></span>Log 6 — iPhone iOS 27<span class="fc" data-tooltip="10 events fired">10</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Android FOLDER -->
+      <div class="sb-section">
+        <div class="folder open" id="folder-android">
+          <div class="folder-header" onclick="toggleFolder('folder-android')">
+            <span style="font-size:12px">📁</span> Android
+            
+            <span class="folder-chevron">▶</span>
+          </div>
+          <div class="folder-children">
+            <button class="file-btn and-f1"  onclick="filterFile('and-f1', this)"><span class="fdot"></span>Log 1  — Pixel 10 Pro<span class="fc" data-tooltip="112 events fired">112</span></button>
+            <button class="file-btn and-f2"  onclick="filterFile('and-f2', this)"><span class="fdot"></span>Log 2  — Pixel 10<span class="fc" data-tooltip="112 events fired">112</span></button>
+            <button class="file-btn and-f3"  onclick="filterFile('and-f3', this)"><span class="fdot"></span>Log 3  — Pixel 10 Pro<span class="fc" data-tooltip="112 events fired">112</span></button>
+            <button class="file-btn and-f4"  onclick="filterFile('and-f4', this)"><span class="fdot"></span>Log 4  — Pixel 6<span class="fc" data-tooltip="112 events fired">112</span></button>
+            <button class="file-btn and-f5"  onclick="filterFile('and-f5', this)"><span class="fdot"></span>Log 5  — Pixel 10 Pro<span class="fc" data-tooltip="112 events fired">112</span></button>
+            <button class="file-btn and-f6"  onclick="filterFile('and-f6', this)"><span class="fdot"></span>Log 6  — Galaxy S24<span class="fc" data-tooltip="110 events fired">110</span></button>
+            <button class="file-btn and-f7"  onclick="filterFile('and-f7', this)"><span class="fdot"></span>Log 7  — Galaxy S24<span class="fc" data-tooltip="103 events fired">103</span></button>
+            <button class="file-btn and-f8"  onclick="filterFile('and-f8', this)"><span class="fdot"></span>Log 8  — Pixel 10 Pro<span class="fc" data-tooltip="115 events fired">115</span></button>
+            <button class="file-btn and-f9"  onclick="filterFile('and-f9', this)"><span class="fdot"></span>Log 9  — Pixel 10<span class="fc" data-tooltip="109 events fired">109</span></button>
+            <button class="file-btn and-f10" onclick="filterFile('and-f10',this)"><span class="fdot"></span>Log 10 — Galaxy S24<span class="fc" data-tooltip="110 events fired">110</span></button>
+            <button class="file-btn and-f11" onclick="filterFile('and-f11',this)"><span class="fdot"></span>Log 11 — Pixel 6<span class="fc" data-tooltip="110 events fired">110</span></button>
+            <button class="file-btn and-f12" onclick="filterFile('and-f12',this)"><span class="fdot"></span>Log 12 — Pixel 6<span class="fc" data-tooltip="113 events fired">113</span></button>
+            <button class="file-btn and-f13" onclick="filterFile('and-f13',this)"><span class="fdot"></span>Log 13 — Pixel 10<span class="fc" data-tooltip="111 events fired">111</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-divider"></div>
+
+      <!-- EVENT TYPE -->
+      <div class="sb-section">
+        <div class="sb-label">Event type</div>
+        <button class="cat-btn active" onclick="filterCat('all',this)">
+          <span class="cdot" style="background:var(--text2)"></span>All types<span class="cpill" id="cnt-all">17</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('SDK Lifecycle',this)">
+          <span class="cdot sdk-lifecycle"></span>SDK Lifecycle<span class="cpill" id="cnt-sdkl">1</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('SDK Identity',this)">
+          <span class="cdot sdk-identity"></span>SDK Identity<span class="cpill" id="cnt-sdki">1</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('SDK Auto',this)">
+          <span class="cdot sdk-auto"></span>SDK Auto<span class="cpill" id="cnt-sdka">2</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('SDK Push',this)">
+          <span class="cdot sdk-push"></span>SDK Push (iOS)<span class="cpill" id="cnt-sdkp">2</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('SDK Session',this)">
+          <span class="cdot sdk-session"></span>SDK Session (iOS)<span class="cpill" id="cnt-sdks">2</span>
+        </button>
+        <button class="cat-btn" onclick="filterCat('Custom',this)">
+          <span class="cdot custom"></span>Custom<span class="cpill" id="cnt-custom">9</span>
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- ═══ MAIN RIGHT PANEL ═══ -->
+  <div class="main">
+    <div class="main-inner">
+
+      <!-- CONTEXT BANNER -->
+      <div class="context-banner" id="context-banner">
+        <span class="ctx-dot" id="ctx-dot" style="background:linear-gradient(135deg,#007aff,#3dba4e)"></span>
+        <div class="ctx-info">
+          <div class="ctx-title" id="ctx-title">All sessions</div>
+          <div class="ctx-meta" id="ctx-meta">iOS &amp; Android · SDK 9.24.0 / 14.06.00 · App 6.7.0 / 4.104.0</div>
+        </div>
+        <div class="ctx-stats">
+          <div class="cstat"><div class="cstat-val" id="ctx-moe">1,558</div><div class="cstat-label">MoE events</div></div>
+          <div class="cstat"><div class="cstat-val" id="ctx-custom" style="color:var(--green)">67</div><div class="cstat-label">Custom fires</div></div>
+
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="search-row">
+        <input class="search-input" type="text" placeholder="Search events or attributes…" id="search-input" oninput="render()">
+        <span class="results-count" id="results-count"></span>
+        <button id="clear-btn" onclick="clearFilters()" style="display:none;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid #e8e4de;background:#fff;color:#888;font-size:11px;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .13s;" onmouseover="this.style.background='#1a1a1a';this.style.color='#fff';this.style.borderColor='#1a1a1a'" onmouseout="this.style.background='#fff';this.style.color='#888';this.style.borderColor='#e8e4de'">
+          ✕ Clear filters
+        </button>
+      </div>
+
+      <!-- EVENT LIST -->
+      <div class="section-label" id="events-label">Events</div>
+      <div class="events-list" id="events-list"></div>
+
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════ */
+const FILES = {
+  'ios-f1': {label:'iOS Log 1',  color:'#007aff', platform:'ios',     totalReq:121,  moeEvents:11,  errors:13,  device:'iPhone',           os:'iOS 26',     session:'2F2666D2', start:'10:42:41', sdk:'9.24.0',  app:'6.7.0'},
+  'ios-f2': {label:'iOS Log 2',  color:'#34aadc', platform:'ios',     totalReq:140,  moeEvents:11,  errors:77,  device:'iPhone',           os:'iOS 27',     session:'BF5689B6', start:'10:50:41', sdk:'9.24.0',  app:'6.7.0'},
+  'ios-f3': {label:'iOS Log 3',  color:'#5ac8fa', platform:'ios',     totalReq:96,   moeEvents:11,  errors:14,  device:'iPhone',           os:'iOS 26',     session:'6F109ED6', start:'10:53:06', sdk:'9.24.0',  app:'6.7.0'},
+  'ios-f4': {label:'iOS Log 4',  color:'#4cd964', platform:'ios',     totalReq:151,  moeEvents:11,  errors:11,  device:'iPhone',           os:'iOS 26',     session:'0D9347A6', start:'10:42:39', sdk:'9.24.0',  app:'6.7.0'},
+  'ios-f5': {label:'iOS Log 5',  color:'#ff9500', platform:'ios',     totalReq:156,  moeEvents:11,  errors:85,  device:'iPhone',           os:'iOS 27',     session:'0E0D647A', start:'10:42:59', sdk:'9.24.0',  app:'6.7.0'},
+  'ios-f6': {label:'iOS Log 6',  color:'#ff3b30', platform:'ios',     totalReq:110,  moeEvents:10,  errors:48,  device:'iPhone',           os:'iOS 27',     session:'39906CEC', start:'10:42:56', sdk:'9.24.0',  app:'6.7.0'},
+  'and-f1': {label:'Android Log 1',  color:'#4f63e7', platform:'android', totalReq:647,  moeEvents:112, errors:14,  device:'Google Pixel 10 Pro',  os:'Android 36', session:'2eefd0c3', start:'09:49:02', sdk:'14.06.00', app:'4.104.0'},
+  'and-f2': {label:'Android Log 2',  color:'#059669', platform:'android', totalReq:775,  moeEvents:112, errors:16,  device:'Google Pixel 10',      os:'Android 36', session:'3ffafb46', start:'09:56:23', sdk:'14.06.00', app:'4.104.0'},
+  'and-f3': {label:'Android Log 3',  color:'#d97706', platform:'android', totalReq:818,  moeEvents:112, errors:13,  device:'Google Pixel 10 Pro',  os:'Android 36', session:'0273c07b', start:'09:43:06', sdk:'14.06.00', app:'4.104.0'},
+  'and-f4': {label:'Android Log 4',  color:'#dc2626', platform:'android', totalReq:768,  moeEvents:112, errors:13,  device:'Google Pixel 6',       os:'Android 36', session:'c4ce5b4b', start:'09:43:03', sdk:'14.06.00', app:'4.104.0'},
+  'and-f5': {label:'Android Log 5',  color:'#7c3aed', platform:'android', totalReq:839,  moeEvents:112, errors:16,  device:'Google Pixel 10 Pro',  os:'Android 36', session:'3c3dbc12', start:'09:48:05', sdk:'14.06.00', app:'4.104.0'},
+  'and-f6': {label:'Android Log 6',  color:'#0891b2', platform:'android', totalReq:851,  moeEvents:110, errors:12,  device:'Samsung SM-S921E',     os:'Android 36', session:'8f506de0', start:'09:43:06', sdk:'14.06.00', app:'4.104.0'},
+  'and-f7': {label:'Android Log 7',  color:'#ea580c', platform:'android', totalReq:38,   moeEvents:103, errors:10,  device:'Samsung SM-S921B',     os:'Android 36', session:'2610db60', start:'09:43:05', sdk:'14.06.00', app:'4.104.0'},
+  'and-f8': {label:'Android Log 8',  color:'#0d9488', platform:'android', totalReq:900,  moeEvents:115, errors:12,  device:'Google Pixel 10 Pro',  os:'Android 36', session:'af973c06', start:'09:44:32', sdk:'14.06.00', app:'4.104.0'},
+  'and-f9': {label:'Android Log 9',  color:'#be185d', platform:'android', totalReq:414,  moeEvents:109, errors:11,  device:'Google Pixel 10',      os:'Android 36', session:'f2d48f7a', start:'09:52:37', sdk:'14.06.00', app:'4.104.0'},
+  'and-f10':{label:'Android Log 10', color:'#1d4ed8', platform:'android', totalReq:715,  moeEvents:110, errors:15,  device:'Samsung SM-S921B',     os:'Android 36', session:'6ce5c161', start:'09:43:06', sdk:'14.06.00', app:'4.104.0'},
+  'and-f11':{label:'Android Log 11', color:'#65a30d', platform:'android', totalReq:774,  moeEvents:110, errors:13,  device:'Google Pixel 6',       os:'Android 36', session:'33193299', start:'09:57:59', sdk:'14.06.00', app:'4.104.0'},
+  'and-f12':{label:'Android Log 12', color:'#9333ea', platform:'android', totalReq:720,  moeEvents:113, errors:27,  device:'Google Pixel 6',       os:'Android 36', session:'c7067051', start:'09:55:29', sdk:'14.06.00', app:'4.104.0'},
+  'and-f13':{label:'Android Log 13', color:'#b45309', platform:'android', totalReq:715,  moeEvents:111, errors:13,  device:'Google Pixel 10',      os:'Android 36', session:'54f94561', start:'09:54:33', sdk:'14.06.00', app:'4.104.0'},
+};
+
+const EVENTS = [
+  {name:'INSTALL', category:'SDK Lifecycle', platform:'both',
+   desc:'First app launch — SDK captures install metadata automatically.',
+   files:{'ios-f1':1,'ios-f2':1,'ios-f3':1,'ios-f4':1,'ios-f5':1,'ios-f6':1,'and-f1':1,'and-f2':1,'and-f3':1,'and-f4':1,'and-f5':1,'and-f6':1,'and-f7':1,'and-f8':1,'and-f9':1,'and-f10':1,'and-f11':1,'and-f12':1,'and-f13':1},
+   attrs:[
+     {key:'VERSION',        type:'int',            sample:'1695',                    note:'Android only — app build number'},
+     {key:'sdk_ver',        type:'int',            sample:'140600',                  note:'Android only — SDK version code'},
+     {key:'INSTALLED_TIME', type:'long (epoch ms)',sample:'1783330983842',            note:'Android only — unix ms timestamp'},
+     {key:'os',             type:'string',         sample:'"ANDROID"',               note:'Android only — not sent on iOS INSTALL'},
+   ],
+   flags:['Auto-emitted by SDK on both platforms','No manual instrumentation needed','Fires once per session in test env (reset state)'],
+   note:'iOS INSTALL fires with no attributes. Android captures VERSION, sdk_ver, INSTALLED_TIME and os. Present in all 19 sessions.'},
+
+  {name:'EVENT_ACTION_USER_ATTRIBUTE', category:'SDK Identity', platform:'android',
+   desc:'Fires on each MoEAnalyticsHelper.setUserAttribute() call. Each attribute dispatched as a separate event.',
+   files:{'and-f1':6,'and-f2':6,'and-f3':6,'and-f4':6,'and-f5':6,'and-f6':6,'and-f7':0,'and-f8':7,'and-f9':5,'and-f10':6,'and-f11':6,'and-f12':7,'and-f13':6},
+   attrs:[
+     {key:'USER_ATTRIBUTE_USER_FIRST_NAME', type:'string',           sample:'"usertest", "portaltest", "testaab"',              note:''},
+     {key:'USER_ATTRIBUTE_USER_MOBILE',     type:'string',           sample:'"6366956373", "9513999626", "9513267734"',          note:'Each sent as a separate event call'},
+     {key:'USER_ATTRIBUTE_USER_EMAIL',      type:'string',           sample:'"apps-manual4@swiggy.in", "nidhi.menon@swiggy.in"', note:''},
+     {key:'USER_ATTRIBUTE_UNIQUE_ID',       type:'string (numeric)', sample:'"78751056", "103648513", "21790166"',               note:'Swiggy internal user ID'},
+     {key:'location[].lastLocation',        type:'string (lat,lng)', sample:'"19.1099392,73.0248632", "13.0011774,80.2564957"',  note:'Sent via EVENT_ATTRS_CUST field'},
+   ],
+   flags:['Android SDK only','iOS has no equivalent user-attribute event','Absent in Log 7 (short session)'],
+   warn:'Sent 5–7× per session with identical values — cache last-sent and re-send only on change.'},
+
+  {name:'EVENT_ACTION_ACTIVITY_START', category:'SDK Auto', platform:'android',
+   desc:'Fires on every Android Activity.onStart() — one per screen opened. Automatic screen tracking with no custom code.',
+   files:{'and-f1':102,'and-f2':102,'and-f3':102,'and-f4':102,'and-f5':102,'and-f6':102,'and-f7':102,'and-f8':102,'and-f9':102,'and-f10':102,'and-f11':102,'and-f12':103,'and-f13':102},
+   attrs:[
+     {key:'ACTIVITY_NAME', type:'string', sample:'"in.swiggy.android.activities.HomeActivity", "in.swiggy.android.feature.menuv2.MenuV2Activity"', note:'Fully-qualified Android class name; 102 unique screens in manifest'},
+   ],
+   flags:['Android SDK auto-event','N_I_E=1 on all fires except the first','No manual instrumentation needed','1,327 total fires across 13 sessions'],
+   note:'iOS has no screen-level equivalent. iOS only tracks session boundaries (SESSION_START / SESSION_END).'},
+
+  {name:'EVENT_ACTION_DEVICE_ATTRIBUTE', category:'SDK Auto', platform:'both',
+   desc:'SDK init — captures device and push opt-in state. Behaviour differs significantly between iOS and Android.',
+   files:{'ios-f1':3,'ios-f2':3,'ios-f3':3,'ios-f4':3,'ios-f5':3,'ios-f6':3,'and-f1':1,'and-f2':1,'and-f3':1,'and-f4':1,'and-f5':1,'and-f6':1,'and-f7':1,'and-f8':1,'and-f9':1,'and-f10':1,'and-f11':1,'and-f12':1,'and-f13':1},
+   attrs:[
+     {key:'deviceType',                 type:'string',  sample:'"MOBILE"',              note:'Android only — MOBILE | TABLET; set once at SDK init'},
+     {key:'moe_push_opted',             type:'boolean', sample:'false → true',          note:'iOS only — false pre-prompt, true after permission granted'},
+     {key:'moe_push_provisional_opted', type:'boolean', sample:'false',                 note:'iOS only — provisional push; always false in these sessions'},
+   ],
+   flags:['Present on both platforms','Android: 1 fire per session | iOS: 3 fires per session'],
+   note:'Android captures device form factor once. iOS re-fires as push opt-in state changes across the permission dialog flow.'},
+
+  {name:'EVENT_ACTION_IOS_SESSION_START', category:'SDK Session', platform:'ios',
+   desc:'iOS app enters foreground — marks start or resumption of a session.',
+   files:{'ios-f1':3,'ios-f2':3,'ios-f3':3,'ios-f4':3,'ios-f5':3,'ios-f6':3},
+   attrs:[],
+   flags:['iOS SDK auto-event only','No attributes','3 fires per session: launch + after permission dialog + background resume'],
+   note:'Android equivalent is inferred from Activity lifecycle (EVENT_ACTION_ACTIVITY_START). iOS does not auto-track individual screens.'},
+
+  {name:'EVENT_ACTION_IOS_SESSION_END', category:'SDK Session', platform:'ios',
+   desc:'iOS app enters background — marks end of an active session.',
+   files:{'ios-f1':2,'ios-f2':2,'ios-f3':2,'ios-f4':2,'ios-f5':2,'ios-f6':2},
+   attrs:[],
+   flags:['iOS SDK auto-event only','No attributes','2 fires per session'],
+   note:'Absent from Log 6 final batch — likely not flushed before capture window ended.'},
+
+  {name:'MOE_NOTIFICATION_PERMISSION_REQUEST_ATTEMPTED', category:'SDK Push', platform:'ios',
+   desc:'SDK triggered the iOS system push notification permission dialog.',
+   files:{'ios-f1':1,'ios-f2':1,'ios-f3':1,'ios-f4':1,'ios-f5':1,'ios-f6':1},
+   attrs:[
+     {key:'os_version',    type:'string',  sample:'"26.0" (logs 1,3,4)  ·  "27.0" (logs 2,5,6)', note:'iOS version of the device'},
+     {key:'action_type',   type:'string',  sample:'"opt_in_pop_up"',                              note:'System-level permission dialog every time'},
+     {key:'request_count', type:'integer', sample:'1',                                            note:'Always 1 — first request per session'},
+   ],
+   flags:['iOS SDK auto-event only','In w_e server-watched-events list','No Android equivalent']},
+
+  {name:'MOE_PUSH_PERMISSION_STATE_ALLOWED', category:'SDK Push', platform:'ios',
+   desc:'User granted push notification permission via the iOS system dialog.',
+   files:{'ios-f1':1,'ios-f2':1,'ios-f3':1,'ios-f4':1,'ios-f5':1,'ios-f6':1},
+   attrs:[
+     {key:'os_version', type:'string', sample:'"26.0"  ·  "27.0"', note:''},
+     {key:'flow',       type:'string', sample:'"self"',             note:'SDK triggered the dialog directly — not via a custom soft-ask'},
+     {key:'source',     type:'string', sample:'"dialog"',           note:'iOS system dialog'},
+   ],
+   flags:['iOS SDK auto-event only','In w_e server-watched-events list','User allowed in all 6 sessions']},
+
+  {name:'Log In', category:'Custom', platform:'android',
+   desc:'User authentication complete. Fires once after successful login.',
+   files:{'and-f1':1,'and-f2':1,'and-f3':1,'and-f4':1,'and-f5':1,'and-f6':1,'and-f7':0,'and-f8':1,'and-f9':1,'and-f10':1,'and-f11':1,'and-f12':1,'and-f13':1},
+   attrs:[],
+   flags:['In f_e funnel whitelist','Fires in 12/13 Android sessions — absent in Log 7','No iOS equivalent observed'],
+   warn:'Zero attributes in all 12 sessions — add login_method, success flag, and user ID at minimum.'},
+
+  {name:'Home Page Viewed', category:'Custom', platform:'android',
+   desc:'Swiggy landing page impression after session start.',
+   files:{'and-f1':1,'and-f2':1,'and-f3':1,'and-f4':1,'and-f5':1,'and-f6':1,'and-f7':0,'and-f8':2,'and-f9':1,'and-f10':1,'and-f11':1,'and-f12':2,'and-f13':1},
+   attrs:[
+     {key:'Is Super',            type:'string bool',  sample:'"FALSE"',                                    note:'Whether user holds Swiggy One / Super plan'},
+     {key:'Super Plan Type',     type:'string',       sample:'"PLUS"',                                     note:'Plan tier: PLUS | LITE | …'},
+     {key:'User City ID',        type:'int',          sample:'5 (Mumbai)  ·  8 (Chennai)  ·  0 (⚠ unresolved)', note:'0 = event fired before geolocation resolved'},
+     {key:'User City Name',      type:'string',       sample:'"Mumbai"  ·  "Chennai"  ·  "undefined" (⚠)',  note:''},
+     {key:'Address ID',          type:'string',       sample:'"NULL"  ·  "d1mekkqbg26oa2n56o5g"',          note:'NULL when no saved address'},
+     {key:'Platform',            type:'string',       sample:'"Android"',                                  note:''},
+     {key:'Is Accessibility On', type:'string bool',  sample:'"FALSE"',                                    note:''},
+     {key:'SWUID',               type:'string',       sample:'"82347b00f1cb0657"  ·  "5d678f4abfa8544f"',   note:'Swiggy device-bound user ID'},
+     {key:'Session ID',          type:'string',       sample:'"sbr4d109e75-e977-4a3c…"',                   note:'Per-session UUID'},
+   ],
+   flags:['In f_e funnel whitelist'],
+   warn:'City ID = 0 / Name = "undefined" in some sessions — guard against firing before geolocation resolves.'},
+
+  {name:'Food Home Page Viewed', category:'Custom', platform:'android',
+   desc:'Food tab landing page impression.',
+   files:{'and-f1':2,'and-f2':2,'and-f3':2,'and-f4':2,'and-f5':2,'and-f6':0,'and-f7':0,'and-f8':2,'and-f9':1,'and-f10':0,'and-f11':1,'and-f12':2,'and-f13':2},
+   attrs:[
+     {key:'User City ID',        type:'int',         sample:'5  ·  8  ·  0 (⚠)',  note:''},
+     {key:'User City Name',      type:'string',      sample:'"Mumbai"  ·  "Chennai"  ·  "undefined" (⚠)', note:''},
+     {key:'Is Filter Applied',   type:'string bool', sample:'"FALSE"',              note:''},
+     {key:'Filter Details',      type:'string',      sample:'"NULL"',               note:'Populated when a filter is active'},
+     {key:'Platform',            type:'string',      sample:'"Android"',            note:''},
+     {key:'Is Accessibility On', type:'string bool', sample:'"FALSE"',              note:''},
+     {key:'SWUID',               type:'string',      sample:'"82347b00f1cb0657"',   note:''},
+     {key:'Session ID',          type:'string',      sample:'"sbr…"',               note:''},
+   ],
+   flags:['In f_e funnel whitelist'],
+   warn:'Fires 2× per session with identical payload — add session-level deduplication.'},
+
+  {name:'Food Search Results Displayed', category:'Custom', platform:'android',
+   desc:'Search results page impression — keyword, tabs, and result IDs.',
+   files:{'and-f2':1,'and-f3':7,'and-f4':3,'and-f5':6},
+   attrs:[
+     {key:'Search Keyword',      type:'string',       sample:'"Dosa"  ·  "Pizza"  ·  "dosa"',                  note:'⚠ Case-inconsistent — normalise to lowercase'},
+     {key:'Search Status',       type:'string bool',  sample:'"TRUE"',                                          note:'Whether results were returned'},
+     {key:'Search Tab',          type:'string',       sample:'"Dish"  ·  "Resto"',                              note:'Active tab at time of search'},
+     {key:'Search type',         type:'string',       sample:'"Dish"  ·  "NULL"',                               note:'"NULL" when Resto tab is active'},
+     {key:'Item IDs',            type:'string (CSV)', sample:'"177284555, 69690699, 106726763"  ·  "NULL"',      note:'NULL when no dish results found'},
+     {key:'Resto IDs',           type:'string (CSV)', sample:'"1145131, 15057, 13514"',                         note:'CSV of restaurant IDs'},
+     {key:'User City ID',        type:'int',          sample:'8 (Chennai)',                                     note:''},
+     {key:'User City Name',      type:'string',       sample:'"Chennai"',                                      note:''},
+     {key:'Platform',            type:'string',       sample:'"Android"',                                      note:''},
+     {key:'Is Accessibility On', type:'string bool',  sample:'"FALSE"',                                         note:''},
+     {key:'SWUID',               type:'string',       sample:'"5d678f4abfa8544f"',                              note:''},
+     {key:'Session ID',          type:'string',       sample:'"sbr…"',                                          note:''},
+   ],
+   flags:['In f_e funnel whitelist','Only in Logs 2–5 (Chennai sessions)'],
+   note:'Keywords: "Dosa" / "dosa" — 14 fires across logs 3, 4, 5. "Pizza" — 3 fires in logs 3, 5. Richest custom event payload.'},
+
+  {name:'Restaurant Menu Viewed', category:'Custom', platform:'android',
+   desc:'Restaurant detail page — menu impression with full restaurant metadata.',
+   files:{'and-f2':1,'and-f8':1},
+   attrs:[
+     {key:'Restaurant Name',          type:'string',       sample:'"Sangeetha Veg Restaurant"  ·  "Fasta Pizza"',    note:''},
+     {key:'Restaurant ID',            type:'string',       sample:'"14835"  ·  "918732"',                            note:''},
+     {key:'Parent ID',                type:'string',       sample:'"1260"  ·  "78900"',                              note:'Parent chain ID'},
+     {key:'Restaurant City',          type:'string',       sample:'"chennai"',                                       note:'⚠ Lowercase — normalise casing consistently'},
+     {key:'Restaurant Area',          type:'string',       sample:'"Adyar"  ·  "Velachery"',                         note:''},
+     {key:'Restaurant Delivery Time', type:'int',          sample:'33  ·  41',                                       note:'Minutes'},
+     {key:'Cuisines',                 type:'string',       sample:'"North Indian, South Indian"  ·  "Pizzas"',        note:'Comma-delimited within a single string'},
+     {key:'Pure Veg',                 type:'boolean',      sample:'true',                                            note:''},
+     {key:'Veg Opt In Flag',          type:'string bool',  sample:'"FALSE"',                                          note:''},
+     {key:'Restaurant Fav Flag',      type:'boolean',      sample:'false',                                           note:''},
+     {key:'Serviceability',           type:'boolean',      sample:'false  ·  true',                                  note:''},
+     {key:'Safety',                   type:'string',       sample:'"Top-rated for South Indian Meals…"  ·  "NULL"',   note:'Hygiene badge text; NULL for newer restaurants'},
+     {key:'Restaurant Tagged Coupon', type:'string',       sample:'"99 store, FLAT ₹75 off | Use ORDERON"',           note:'Active coupon string at time of view'},
+     {key:'Menulet',                  type:'string',       sample:'"NULL"',                                          note:''},
+     {key:'Address ID',               type:'string',       sample:'"0"',                                             note:''},
+     {key:'User City ID',             type:'int',          sample:'8 (Chennai)',                                     note:''},
+     {key:'Platform',                 type:'string',       sample:'"Android"',                                      note:''},
+     {key:'Is Accessibility On',      type:'string bool',  sample:'"FALSE"',                                         note:''},
+     {key:'SWUID',                    type:'string',       sample:'"5d678f4abfa8544f"',                               note:''},
+     {key:'Session ID',               type:'string',       sample:'"sbr…"',                                          note:''},
+   ],
+   flags:['In f_e funnel whitelist','Only in Logs 2 and 8'],
+   note:'20 attributes — strong signal for restaurant-level targeting. Includes coupon string, delivery time, cuisine, and veg flags.'},
+
+  {name:'Food Cart Viewed', category:'Custom', platform:'android',
+   desc:'Cart page impression — full item, pricing, discount and coupon state.',
+   files:{'and-f8':1},
+   attrs:[
+     {key:'Restaurant Name',           type:'string',       sample:'"Fasta Pizza"',                          note:''},
+     {key:'Restaurant ID',             type:'string',       sample:'"918732"',                               note:''},
+     {key:'item 1 name',               type:'string',       sample:'"Mexican Fiesta 7\\" Pizza"',            note:'Index-based key pattern'},
+     {key:'item 1 id',                 type:'string',       sample:'"173246875"',                            note:''},
+     {key:'item 1 quantity',           type:'string',       sample:'"1"',                                   note:'⚠ String despite being numeric'},
+     {key:'Quantity',                  type:'float',        sample:'1.0',                                   note:''},
+     {key:'Meal Type',                 type:'string',       sample:'"Veg"',                                 note:''},
+     {key:'Item Total',                type:'float',        sample:'219.0',                                 note:'Sum before discounts'},
+     {key:'Total Bill Value',          type:'float',        sample:'102.0',                                 note:'Final amount payable'},
+     {key:'Total Discount',            type:'float',        sample:'150.0',                                 note:''},
+     {key:'Del Fee',                   type:'float',        sample:'0.0',                                   note:'Delivery fee'},
+     {key:'Surge Fee',                 type:'float',        sample:'0.0',                                   note:''},
+     {key:'Taxes and Charges',         type:'string ⚠',    sample:'"33.03"',                               note:'Should be float'},
+     {key:'Cart ID',                   type:'float ⚠',     sample:'960885892.0',                            note:'Should be string or int'},
+     {key:'Coupon Applied Flag',       type:'string',       sample:'"No"',                                  note:'String — not boolean'},
+     {key:'Coupon Code',               type:'string',       sample:'"NULL"',                                note:''},
+     {key:'Coupon Discount Savings',   type:'string ⚠',    sample:'"NULL"',                               note:'Should be float 0.0 when no coupon'},
+     {key:'Is Swiggy One',             type:'boolean',      sample:'False',                                 note:''},
+     {key:'Is Guest User',             type:'boolean',      sample:'False',                                 note:''},
+     {key:'One Free Delivery savings', type:'float',        sample:'71.0',                                  note:''},
+     {key:'EO Discount Savings',       type:'float',        sample:'0.0',                                   note:'Early Order'},
+     {key:'EO Unlocked',               type:'boolean',      sample:'False',                                 note:''},
+     {key:'One Plan Added',            type:'boolean',      sample:'False',                                 note:''},
+     {key:'Is Bolt Cart',              type:'boolean',      sample:'False',                                 note:''},
+     {key:'Address ID',                type:'string',       sample:'""',                                   note:'Empty string — not NULL'},
+     {key:'xChannel',                  type:'string',       sample:'""',                                   note:'Attribution channel — empty'},
+     {key:'User City ID',              type:'int',          sample:'8',                                    note:''},
+     {key:'Platform',                  type:'string',       sample:'"Android"',                            note:''},
+     {key:'SWUID',                     type:'string',       sample:'"1167f453a49a7813"',                   note:''},
+     {key:'Session ID',                type:'string',       sample:'"sbr7c6eab9f-…"',                      note:''},
+   ],
+   flags:['In f_e funnel whitelist','Only in Log 8'],
+   note:'38 attributes — highest count in dataset. Multiple type inconsistencies: Taxes and Charges (string), Cart ID (float), Coupon Discount Savings (NULL string). Consider schema validation.'},
+
+  {name:'Collection Listing Viewed', category:'Custom', platform:'android',
+   desc:'Curated collection listing page — dish, restaurant or IM collections.',
+   files:{'and-f8':1},
+   attrs:[
+     {key:'Collection Name',     type:'string',       sample:'"NULL"',            note:'⚠ NULL — event fires before name resolves'},
+     {key:'Collection ID',       type:'string',       sample:'"227294"',          note:''},
+     {key:'Type of Collection',  type:'string',       sample:'"Dish"',            note:'Dish | Resto | IM'},
+     {key:'Collection Applied',  type:'string bool',  sample:'"FALSE"',           note:''},
+     {key:'Collection Details',  type:'string',       sample:'"NULL"',            note:''},
+     {key:'Address ID',          type:'string',       sample:'"0"',               note:''},
+     {key:'User City ID',        type:'int',          sample:'8 (Chennai)',       note:''},
+     {key:'User City Name',      type:'string',       sample:'"Chennai"',         note:''},
+     {key:'Platform',            type:'string',       sample:'"Android"',         note:''},
+     {key:'Is Accessibility On', type:'string bool',  sample:'"FALSE"',           note:''},
+     {key:'SWUID',               type:'string',       sample:'"1167f453a49a7813"',note:''},
+     {key:'Session ID',          type:'string',       sample:'"sbr7c6eab9f-…"',  note:''},
+   ],
+   flags:['In f_e funnel whitelist','Only in Log 8'],
+   note:'Collection Name is NULL — add a guard to wait for name resolution before firing.'},
+
+  {name:'IM Home Menu Viewed', category:'Custom', platform:'android',
+   desc:'Instamart home landing page — store-level impression.',
+   files:{'and-f6':1,'and-f10':2},
+   attrs:[
+     {key:'Store Name',          type:'string',       sample:'"Instamart"',                          note:''},
+     {key:'Store ID',            type:'string',       sample:'"1404806" (Log 6)  ·  "1369819" (Log 10)', note:'Different IDs per city'},
+     {key:'User City ID',        type:'int',          sample:'0 (⚠ unresolved)  ·  8 (Chennai)',     note:''},
+     {key:'User City Name',      type:'string',       sample:'"NULL"  ·  "Chennai"',                 note:''},
+     {key:'Platform',            type:'string',       sample:'"Android"',                            note:''},
+     {key:'Is Accessibility On', type:'string bool',  sample:'"FALSE"',                              note:''},
+     {key:'SWUID',               type:'string',       sample:'"1b98a1344e4b2e04"',                   note:''},
+     {key:'swuid',               type:'string',       sample:'"1b98a1344e4b2e04"',                   note:'⚠ DUPLICATE of SWUID — case mismatch'},
+     {key:'Session ID',          type:'string',       sample:'"sbr1890de17-…"',                      note:''},
+   ],
+   flags:['In f_e funnel whitelist','Only in Logs 6 and 10'],
+   warn:'Both SWUID and swuid sent with identical values — remove the lowercase swuid key.'},
+
+  {name:'IRCTC Pnr Viewed', category:'Custom', platform:'android',
+   desc:'IRCTC / travel PNR lookup page — Swiggy travel vertical feature.',
+   files:{'and-f6':1},
+   attrs:[
+     {key:'User City ID',        type:'int',         sample:'8 (Chennai)',          note:''},
+     {key:'User City Name',      type:'string',      sample:'"Chennai"',            note:''},
+     {key:'Platform',            type:'string',      sample:'"Android"',            note:''},
+     {key:'Is Accessibility On', type:'string bool', sample:'"FALSE"',              note:''},
+     {key:'SWUID',               type:'string',      sample:'"1b98a1344e4b2e04"',   note:''},
+     {key:'Session ID',          type:'string',      sample:'"sbr1890de17-…"',      note:''},
+   ],
+   flags:['Only in Log 6 (Samsung SM-S921E)','Not in f_e funnel whitelist'],
+   note:'Unique to the Galaxy S921E session. Not in MoEngage funnel whitelist — confirm if intentional instrumentation or accidental firing.'},
+];
+
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let activeFile = 'all';
+let activePlat = 'all';
+let activeCat  = 'all';
+let searchQ    = '';
+
+/* ═══════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════ */
+function catClass(c){
+  return {'SDK Lifecycle':'sdk-lifecycle','SDK Identity':'sdk-identity','SDK Auto':'sdk-auto',
+          'SDK Push':'sdk-push','SDK Session':'sdk-session','Custom':'custom'}[c]||'custom';
+}
+function visibleFKs(){
+  return Object.keys(FILES).filter(k => activePlat==='all' || FILES[k].platform===activePlat);
+}
+function activeFKs(){
+  return activeFile==='all' ? visibleFKs() : [activeFile];
+}
+function toggleFolder(id){ document.getElementById(id).classList.toggle('open'); }
+function toggleCard(el){ el.classList.toggle('open'); }
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function render(){
+  searchQ = document.getElementById('search-input').value.toLowerCase();
+  const fks = activeFKs();
+
+  /* filter events */
+  const filtered = EVENTS.filter(evt => {
+    const platOk = activePlat==='all' || evt.platform===activePlat || evt.platform==='both';
+    const catOk  = activeCat==='all'  || evt.category===activeCat;
+    const fileOk = fks.some(k => evt.files[k]>0);
+    const srchOk = !searchQ ||
+      evt.name.toLowerCase().includes(searchQ) ||
+      evt.desc.toLowerCase().includes(searchQ) ||
+      evt.category.toLowerCase().includes(searchQ) ||
+      (evt.warn||'').toLowerCase().includes(searchQ) ||
+      evt.attrs.some(a => a.key.toLowerCase().includes(searchQ)||a.sample.toLowerCase().includes(searchQ));
+    return platOk && catOk && fileOk && srchOk;
+  });
+
+  /* build event cards */
+  const evHtml = filtered.map(evt => {
+    const cc    = catClass(evt.category);
+    const total = fks.reduce((s,k)=>s+(evt.files[k]||0),0);
+
+    /* attribute table */
+    const attrBody = evt.attrs.length
+      ? `<table class="attr-table">
+          <thead><tr><th>Attribute</th><th>Type</th><th>Sample value</th><th>Note</th></tr></thead>
+          <tbody>${evt.attrs.map(a=>`
+            <tr>
+              <td><span class="attr-key">${a.key}</span></td>
+              <td><span class="attr-type">${a.type}</span></td>
+              <td class="attr-sample">${a.sample}</td>
+              <td class="attr-note">${a.note||'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`
+      : `<div class="no-attrs">No attributes on this event</div>`;
+
+
+    const platLabel  = evt.platform==='both' ? 'iOS + Android' : evt.platform==='ios' ? 'iOS only' : 'Android only';
+    const platCls    = evt.platform;
+    const noteBlock  = evt.note ? `<div class="ev-note">${evt.note}</div>` : '';
+
+    const accentColors = {'sdk-lifecycle':'#c4b5fd','sdk-identity':'#67e8f9','sdk-auto':'#fcd34d','sdk-push':'#fdba74','sdk-session':'#86efac','custom':'#86efac'};
+    const accentColor = accentColors[cc] || '#e5e5e5';
+    const hasAttrs = evt.attrs.length > 0;
+    return `<div class="event-card">
+      <div class="event-card-header${hasAttrs ? ' clickable' : ''}" ${hasAttrs ? 'onclick="toggleCard(this.parentElement)"' : ''}>
+        <div class="ev-cat-accent" style="background:${accentColor}"></div>
+        <div class="ev-main">
+          <div class="ev-name">${evt.name}</div>
+          <div class="ev-desc">${evt.desc}</div>
+        </div>
+        <span class="ev-cat-label ${cc}">${evt.category}</span>
+        <span class="ev-platform-tag ${platCls}">${platLabel}</span>
+        <span class="ev-attrs-pill">${evt.attrs.length} attribute${evt.attrs.length!==1?'s':''}</span>
+        <span class="ev-count">${total}<span class="ev-count-label"> fires</span></span>
+        ${hasAttrs ? '<span class="ev-chevron">▶</span>' : ''}
+      </div>
+      ${hasAttrs ? `<div class="event-body">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6;padding-bottom:10px;border-bottom:1px solid var(--warm-border)">${evt.desc}</div>
+        ${attrBody}
+        ${noteBlock}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('events-list').innerHTML = evHtml || '<div class="empty">No events match your filters</div>';
+  document.getElementById('results-count').textContent = `${filtered.length} event type${filtered.length!==1?'s':''}`;
+  document.getElementById('events-label').textContent  = `Events (${filtered.length})`;
+
+  /* sidebar counts — All types always reflects session/search but ignores cat filter */
+  const allForCount = EVENTS.filter(evt => {
+    const platOk = activePlat==='all' || evt.platform===activePlat || evt.platform==='both';
+    const fileOk = fks.some(k => evt.files[k]>0);
+    const srchOk = !searchQ ||
+      evt.name.toLowerCase().includes(searchQ) ||
+      evt.desc.toLowerCase().includes(searchQ) ||
+      evt.category.toLowerCase().includes(searchQ) ||
+      (evt.warn||'').toLowerCase().includes(searchQ) ||
+      evt.attrs.some(a => a.key.toLowerCase().includes(searchQ)||a.sample.toLowerCase().includes(searchQ));
+    return platOk && fileOk && srchOk;
+  });
+  const cmap = {'SDK Lifecycle':0,'SDK Identity':0,'SDK Auto':0,'SDK Push':0,'SDK Session':0,'Custom':0};
+  allForCount.forEach(e=>{ if(cmap[e.category]!==undefined) cmap[e.category]++; });
+  document.getElementById('cnt-all').textContent    = allForCount.length;
+  const hb = document.getElementById('hbadge-events');
+  if(hb) hb.textContent = filtered.length + ' event type' + (filtered.length!==1?'s':'');
+  document.getElementById('cnt-sdkl').textContent   = cmap['SDK Lifecycle'];
+  document.getElementById('cnt-sdki').textContent   = cmap['SDK Identity'];
+  document.getElementById('cnt-sdka').textContent   = cmap['SDK Auto'];
+  document.getElementById('cnt-sdkp').textContent   = cmap['SDK Push'];
+  document.getElementById('cnt-sdks').textContent   = cmap['SDK Session'];
+  document.getElementById('cnt-custom').textContent = cmap['Custom'];
+
+  /* ── STATS: computed from filtered events + active file selection ── */
+  let totalMoe=0, totalCustom=0;
+
+  filtered.forEach(e=>{
+    fks.forEach(k=>{
+      totalMoe    += (e.files[k]||0);
+      if(e.category==='Custom') totalCustom += (e.files[k]||0);
+    });
+  });
+
+  /* total unique attribute keys across filtered events */
+  const allAttrKeys = new Set();
+  filtered.forEach(e => e.attrs.forEach(a => allAttrKeys.add(a.key)));
+  const totalAttrs = allAttrKeys.size;
+  const psAttrs = document.getElementById('ps-attrs');
+  if(psAttrs) psAttrs.textContent = totalAttrs;
+
+  /* context banner */
+  const isFiltered = activeCat!=='all' || !!searchQ;
+  let ctxTitle='', ctxMeta='', ctxDot='';
+  if(activeFile==='all'){
+    const n=fks.length;
+    if(activePlat==='ios')      { ctxTitle=`All iOS sessions (${n})`;      ctxMeta='iPhone · SDK 9.24.0 · App 6.7.0';                              ctxDot='background:#007aff'; }
+    else if(activePlat==='android'){ ctxTitle=`All Android sessions (${n})`; ctxMeta='Google Pixel & Samsung · SDK 14.06.00 · App 4.104.0';          ctxDot='background:#3dba4e'; }
+    else                        { ctxTitle=`All sessions (${n})`;           ctxMeta=`${n} sessions · iOS (SDK 9.24.0 · App 6.7.0) &amp; Android (SDK 14.06.00 · App 4.104.0)`; ctxDot='background:linear-gradient(135deg,#007aff,#3dba4e)'; }
+  } else {
+    const f=FILES[activeFile];
+    ctxTitle=`${f.label} — ${f.device}`;
+    ctxMeta=`${f.os} · Session ${f.session}… · ${f.start} UTC · SDK ${f.sdk} · App ${f.app}`;
+    ctxDot=`background:${f.color}`;
+  }
+  document.getElementById('ctx-dot').style=ctxDot;
+  document.getElementById('ctx-title').textContent=ctxTitle;
+  document.getElementById('ctx-meta').innerHTML=ctxMeta;
+  document.getElementById('ctx-moe').textContent=totalMoe.toLocaleString();
+  document.getElementById('ctx-custom').textContent=totalCustom;
+
+
+  /* top bar stats */
+  document.getElementById('ps-sess').textContent=fks.length;
+  document.getElementById('ps-evts').textContent=totalMoe.toLocaleString();
+  document.getElementById('ps-cust').textContent=totalCustom;
+
+  const allFcEl=document.getElementById('all-fc'); if(allFcEl){allFcEl.textContent=fks.length; allFcEl.setAttribute('data-tooltip',fks.length+' sessions');}
+  document.getElementById('ps-evts-label').textContent = isFiltered ? 'Matching fires' : 'MoE events';
+  document.getElementById('ps-cust-label').textContent = isFiltered ? 'Custom (filtered)' : 'Custom fires';
+
+  /* filter badge */
+  const badge=document.getElementById('ps-filter-badge');
+  const parts=[];
+  if(activeCat!=='all') parts.push(activeCat);
+  if(searchQ) parts.push(`"${searchQ}"`);
+  if(parts.length){ document.getElementById('ps-filter-text').textContent='⌬ '+parts.join(' · '); badge.style.display=''; }
+  else { badge.style.display='none'; }
+
+  /* show/hide clear-filters button */
+  const anyFilter = activePlat!=='all' || activeFile!=='all' || activeCat!=='all' || !!searchQ;
+  const cb = document.getElementById('clear-btn');
+  if(cb) cb.style.display = anyFilter ? 'inline-flex' : 'none';
+
+}
+
+
+/* ═══════════════════════════════════════════════════
+   FILTER HANDLERS
+═══════════════════════════════════════════════════ */
+function filterPlatform(plat, btn){
+  activePlat=plat; activeFile='all';
+  document.querySelectorAll('.plat-btn').forEach(b=>b.classList.remove('active','all','ios','android'));
+  btn.classList.add('active');
+  btn.classList.add(plat);
+  document.querySelectorAll('.file-btn,.all-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('all-btn').classList.add('active');
+  document.getElementById('folder-ios').style.display     = (plat==='android') ? 'none' : '';
+  document.getElementById('folder-android').style.display = (plat==='ios')     ? 'none' : '';
+  render();
+}
+
+function filterFile(fk, btn){
+  activeFile=fk;
+  document.querySelectorAll('.file-btn,.all-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  /* auto-set platform if picking a specific session */
+  if(fk!=='all'){
+    const plat=FILES[fk].platform;
+    activePlat=plat;
+    document.querySelectorAll('.plat-btn').forEach(b=>b.classList.remove('active','all','ios','android'));
+    const pb=document.querySelector(`.plat-btn[data-plat="${plat}"]`); if(pb) pb.classList.add('active',plat);
+  }
+  render();
+}
+
+function filterCat(cat, btn){
+  activeCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active','sdk-lifecycle','sdk-identity','sdk-auto','sdk-push','sdk-session','custom'));
+  btn.classList.add('active');
+  if(cat!=='all') btn.classList.add(catClass(cat));
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
+   CLEAR FILTERS
+═══════════════════════════════════════════════════ */
+function clearFilters(){
+  // reset state
+  activePlat = 'all';
+  activeFile = 'all';
+  activeCat  = 'all';
+  searchQ    = '';
+
+  // clear search input
+  document.getElementById('search-input').value = '';
+
+  // reset platform buttons
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active','all','ios','android'));
+  document.querySelector('.plat-btn[data-plat="all"]').classList.add('active','all');
+
+  // reset session buttons
+  document.querySelectorAll('.file-btn,.all-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('all-btn').classList.add('active');
+
+  // show both folders
+  document.getElementById('folder-ios').style.display     = '';
+  document.getElementById('folder-android').style.display = '';
+
+  // reset cat buttons
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.remove('active','sdk-lifecycle','sdk-identity','sdk-auto','sdk-push','sdk-session','custom');
+  });
+  document.querySelectorAll('.cat-btn')[0].classList.add('active'); // "All types" is first
+
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+render();
+
+/* ── FC TOOLTIP ── */
+(function(){
+  const tip = document.createElement('div');
+  tip.id = 'fc-tip';
+  tip.style.cssText = 'position:fixed;background:#1a1a1a;color:#fff;font-size:10px;font-family:Inter,-apple-system,sans-serif;padding:3px 9px;border-radius:4px;pointer-events:none;z-index:9999;display:none;white-space:nowrap;';
+  document.body.appendChild(tip);
+
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('[data-tooltip]');
+    if (!el) return;
+    tip.textContent = el.getAttribute('data-tooltip');
+    tip.style.display = 'block';
+  });
+  document.addEventListener('mousemove', e => {
+    if (tip.style.display === 'none') return;
+    tip.style.left = (e.clientX + 12) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+  });
+  document.addEventListener('mouseout', e => {
+    const el = e.target.closest('[data-tooltip]');
+    if (el) tip.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>
